@@ -1,14 +1,13 @@
 {
-  "name": "@keep-network/upstream-builds-query",
+  "name": "@threshold-network/upstream-builds-query",
   "version": "0.0.1",
   "description": "Action to pull properties from from upstream-builds",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "prepare": "ncc build index.js --license LICENSE",
-    "test": "mocha --exit --recursive"
+    "test": "mocha --recursive --timeout 10000"
   },
-  "repository": "git+https://github.com/keep-network/ci.git",
+  "repository": "git+https://github.com/threshold-network/ci.git",
   "keywords": [
     "GitHub",
     "Actions",
@@ -17,16 +16,12 @@
   "author": "Jakub Nowakowski <jakub.nowakowski@keep.network",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/keep-network/ci/issues"
+    "url": "https://github.com/threshold-network/ci/issues"
   },
-  "homepage": "https://github.com/keep-network/ci/tree/main/actions/upstream-builds-query#readme",
+  "homepage": "https://github.com/threshold-network/ci/tree/main/actions/upstream-builds-query#readme",
   "dependencies": {
-    "@actions/core": "^1.2.7",
-    "@keep-network/ci": "file:../../"
+    "@actions/core": "3.0.1",
+    "@threshold-network/ci": "file:../.."
   },
-  "devDependencies": {
-    "chai": "^4.3.4",
-    "mocha": "^8.2.1",
-    "@vercel/ncc": "^0.33.1"
-  }
+  "private": true
 }

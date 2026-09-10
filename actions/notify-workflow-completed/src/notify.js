@@ -1,7 +1,7 @@
-/** @type {import ("@keep-network/ci/lib/upstream-builds.js" UpstreamBuilds) UpstreamBuilds }*/
+/** @type {import ("@threshold-network/ci/lib/upstream-builds.js" UpstreamBuilds) UpstreamBuilds }*/
 
-const core = require("@actions/core")
-const { dispatch } = require("@keep-network/ci")
+import * as core from "@actions/core";
+import { dispatch } from "@threshold-network/ci";
 
 /**
  * Notifies the release manager repository about build completion.
@@ -21,32 +21,32 @@ async function notifyReleaseManager(
   upstreamRef,
   version
 ) {
-  core.info("appending current build info to upstream builds array")
+  core.info("appending current build info to upstream builds array");
 
   /** @type {UpstreamBuilds} */
-  const newUpstreamBuilds = Array.from(JSON.parse(previousUpstreamBuilds))
+  const newUpstreamBuilds = Array.from(JSON.parse(previousUpstreamBuilds));
   newUpstreamBuilds.push({
     module: module,
     upstream_ref: upstreamRef,
     version: version,
     url: url,
-  })
+  });
 
-  const newUpstreamBuildsString = JSON.stringify(newUpstreamBuilds)
+  const newUpstreamBuildsString = JSON.stringify(newUpstreamBuilds);
 
-  core.debug(`upstream builds: ${newUpstreamBuildsString}`)
+  core.debug(`upstream builds: ${newUpstreamBuildsString}`);
 
   await dispatch(
-    "keep-network",
+    "threshold-network",
     "ci",
     "main.yml",
     "main",
     upstreamRef,
     environment,
     newUpstreamBuildsString
-  )
+  );
 
-  return newUpstreamBuildsString
+  return newUpstreamBuildsString;
 }
 
-module.exports = { notifyReleaseManager }
+export { notifyReleaseManager };

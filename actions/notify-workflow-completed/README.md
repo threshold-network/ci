@@ -20,7 +20,7 @@ The action supports following input parameters:
 ## Action Usage
 
 ```yaml
-- uses: keep-network/ci/actions/notify-workflow-completed@v1
+- uses: threshold-network/ci/actions/notify-workflow-completed@<reviewed-commit-sha>
   with:
     environment: test
     upstream_builds: ""

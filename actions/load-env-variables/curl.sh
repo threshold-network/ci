@@ -1,20 +1,8 @@
-#!/bin/bash
-# Exit on error
-set -e
-
-if ! [ -x "$(command -v curl)" ]; then echo "curl is not installed"; exit 1; fi
-
-echo "-- Downloading config file: $1 ..."
-set -x
-curl \
-  --header "Accept: application/vnd.github.v3.raw" \
-  --output "$1" \
-  --show-error \
-  --fail \
-  --location https://api.github.com/repos/keep-network/ci/contents/config/env/$1?ref=$2
-set +x
-
-if [[ ! -f $1 ]] ; then
-  echo "File $1 not downloaded, aborting. Check if the file $1 exists in 'keep-network/ci/config/env/' on the branch you provided."
-  exit 1
-fi
+#!/usr/bin/env bash
+set -euo pipefail
+[[ "$1" =~ ^[a-zA-Z0-9_-]+\.env$ ]] || { echo "Invalid config filename" >&2; exit 1; }
+curl --proto '=https' --tlsv1.2 --fail --show-error --silent --location --retry 3 \
+  --header 'Accept: application/vnd.github.raw+json' \
+  --get --data-urlencode "ref=$2" \
+  --output "$3" \
+  "https://api.github.com/repos/threshold-network/ci/contents/config/env/$1"

@@ -8,3 +8,5 @@ yarn-error.log
 
 # Temporary files
 /tmp
+
+actions/npm-version-bump/tmp/

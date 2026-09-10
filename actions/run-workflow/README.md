@@ -15,7 +15,7 @@ The action supports following input parameters:
 ## Action Usage
 
 ```yaml
-- uses: keep-network/ci/actions/run-workflow@v1
+- uses: threshold-network/ci/actions/run-workflow@<reviewed-commit-sha>
   with:
     environment: test
     upstream_builds: {}

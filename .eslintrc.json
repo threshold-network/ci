@@ -1,15 +1,28 @@
 {
-  "extends": ["eslint-config-keep", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "prettier"
+  ],
   "parserOptions": {
-    "ecmaVersion": 13,
+    "ecmaVersion": 2022,
     "sourceType": "module"
   },
   "env": {
-    "es6": true,
+    "node": true,
+    "es2022": true,
     "mocha": true
   },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/tmp/**"
+  ],
   "rules": {
-    "new-cap": "off"
-  },
-  "root": true
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ]
+  }
 }

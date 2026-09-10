@@ -1,14 +1,14 @@
-import { expect } from "chai"
+import { expect } from "chai";
 
-import { config } from "../lib/index.js"
-import { Config } from "../lib/config.js"
+import { config } from "../lib/index.js";
+import { Config } from "../lib/config.js";
 
 describe("Config", function () {
   it("reads default configuration file", async () => {
-    expect(config).to.be.an.instanceof(Config)
-    expect(config).to.have.property("defaultModule")
-    expect(config).to.have.property("modules")
-  })
+    expect(config).to.be.an.instanceof(Config);
+    expect(config).to.have.property("defaultModule");
+    expect(config).to.have.property("modules");
+  });
 
   it("reads configuration file", async () => {
     const expected = {
@@ -38,30 +38,45 @@ describe("Config", function () {
           downstream: [],
         },
       },
-    }
+    };
 
-    const actual = new Config("./test/data/config-test.json")
+    const actual = new Config("./test/data/config-test.json");
 
-    expect(actual).to.deep.equal(expected)
-  })
+    expect(actual).to.deep.equal(expected);
+  });
+
+  it("accepts downstream branches that converge on the same module", () => {
+    expect(
+      () =>
+        new Config({
+          defaultModule: "root",
+          modules: {
+            root: { workflow: "root.yml", downstream: ["left", "right"] },
+            left: { workflow: "left.yml", downstream: ["shared"] },
+            right: { workflow: "right.yml", downstream: ["shared"] },
+            shared: { workflow: "shared.yml", downstream: [] },
+          },
+        })
+    ).not.to.throw();
+  });
 
   it("throws an error if default module is missing", async () => {
     expect(
       () => new Config("./test/data/config-missing-default-module.json")
-    ).to.throw(Error, "default module is not defined")
-  })
+    ).to.throw(Error, "default module is not defined");
+  });
 
   it("throws an error if modules configuration is missing", async () => {
     expect(
       () => new Config("./test/data/config-missing-modules.json")
-    ).to.throw(Error, "missing modules configuration")
-  })
+    ).to.throw(Error, "missing modules configuration");
+  });
 
   it("throws an error if configuration for default module is missing", async () => {
     expect(
       () => new Config("./test/data/config-missing-default-module-config.json")
-    ).to.throw(Error, "missing configuration for default module")
-  })
+    ).to.throw(Error, "missing configuration for default module");
+  });
 
   it("throws an error if workflow property is missing", async () => {
     expect(
@@ -69,32 +84,32 @@ describe("Config", function () {
     ).to.throw(
       Error,
       "workflow not defined for module github.com/keep-network/keep-ecdsa/solidity"
-    )
-  })
+    );
+  });
 
   it("throws an error if configuration for downstream module is missing", async () => {
     expect(() => new Config("./test/data/config-missing-module.json")).to.throw(
       Error,
       "missing configuration for module github.com/keep-network/keep-ecdsa/solidity"
-    )
-  })
+    );
+  });
 
   it("throws an error if cyclic dependency", async () => {
     expect(() => new Config("./test/data/config-cyclic.json")).to.throw(
       Error,
       "cyclic dependency found in module github.com/keep-network/tbtc/solidity to github.com/keep-network/keep-core"
-    )
+    );
 
     expect(() => new Config("./test/data/config-cyclic-2.json")).to.throw(
       Error,
       "cyclic dependency found in module github.com/keep-network/keep-core to github.com/keep-network/keep-core"
-    )
-  })
+    );
+  });
 
   it("throws an error if configuration file doesn't exist", async () => {
     expect(() => new Config("./test/data/config-not-exist.json")).to.throw(
       Error,
       "no such file or directory"
-    )
-  })
-})
+    );
+  });
+});

@@ -1,11 +1,9 @@
 {
-  "name": "@keep-network/run-workflow",
+  "name": "@threshold-network/run-workflow",
   "version": "0.0.1",
   "description": "Action to run a GitHub workflow",
   "main": "index.js",
-  "scripts": {
-    "prepare": "ncc build index.js --license LICENSE"
-  },
+  "scripts": {},
   "keywords": [
     "GitHub",
     "Actions",
@@ -13,12 +11,11 @@
   ],
   "author": "Jakub Nowakowski <jakub.nowakowski@keep.network",
   "license": "MIT",
-  "homepage": "https://github.com/keep-network/ci/tree/main/actions/run-workflow#readme",
+  "homepage": "https://github.com/threshold-network/ci/tree/main/actions/run-workflow#readme",
   "dependencies": {
-    "@actions/core": "^1.2.6",
-    "@keep-network/ci": "file:../../"
+    "@actions/core": "3.0.1",
+    "@threshold-network/ci": "file:../.."
   },
-  "devDependencies": {
-    "@vercel/ncc": "^0.33.1"
-  }
+  "private": true,
+  "type": "module"
 }
