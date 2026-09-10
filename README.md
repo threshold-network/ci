@@ -35,7 +35,7 @@ workflows. `check:bundles` runs the shipped bundles outside the source tree with
 no `node_modules` directory. This repository is not published to npm.
 
 The release manager is manually dispatched via `main.yml`. Its source and
-configuration come from the protected default branch; `upstream_ref` selects
+configuration come from the default branch; `upstream_ref` selects
 consumer branches. It requires `CI_GITHUB_TOKEN` with Actions write permission
 on this repository and the three configured consumer repositories. Public
 configuration in `config/env` contains no credentials; use GitHub secrets for

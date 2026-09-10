@@ -53,3 +53,14 @@ The docs destination rename is tracked separately by keep-core #4321 and
 4. Start a deliberately requested release only after those changes are in place.
    Validation of this migration does not publish npm packages, push docs, deploy
    contracts, or invoke the release pipeline.
+
+## Review links
+
+- CI producer: https://github.com/threshold-network/ci/pull/1
+- keep-core consumer: https://github.com/threshold-network/keep-core/pull/4329
+- tbtc-v2 consumer: https://github.com/threshold-network/tbtc-v2/pull/1148
+- solidity-contracts consumer: https://github.com/threshold-network/solidity-contracts/pull/195
+
+The consumers pin `20b35345d276a3c7365e3829b8078387a7c9dccb`, which includes the
+Node compatibility and schema-validation fixes. Subsequent documentation-only
+commits do not change those action or workflow files.
