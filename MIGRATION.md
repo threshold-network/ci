@@ -28,6 +28,10 @@ An explicit `ref` is still supported for a different Threshold configuration
 revision. Existing cloud project values are preserved: changing GitHub ownership
 does not itself migrate cloud infrastructure.
 
+The docs workflow accepts a `nodeVersion` input (default 22.23.1). The legacy
+solidity-contracts Hardhat 2.10 stack selects 18.20.8 until that project upgrades
+its build dependencies; action execution still uses Node 24.
+
 The docs workflow supports both Yarn Classic and modern Yarn lockfiles, uses
 artifact v4, and uses gh for authenticated pushes and PR creation. Existing
 keep-core local docs workflows are already owned and need no source switch.
@@ -36,7 +40,7 @@ The docs destination rename is tracked separately by keep-core #4321 and
 
 ## Rollout
 
-1. Review and merge the CI producer PR. Keep this repository's protected default
+1. Review and merge the CI producer PR. Keep this repository's default
    branch as the release-manager source. Do not use inherited v2 tags: they refer
    to the unmodified Keep implementation.
 2. Ensure `CI_GITHUB_TOKEN` is available to threshold-network/ci and each consumer.
