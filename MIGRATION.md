@@ -32,11 +32,16 @@ The docs workflow accepts a `nodeVersion` input (default 22.23.1). The legacy
 solidity-contracts Hardhat 2.10 stack selects 18.20.8 until that project upgrades
 its build dependencies; action execution still uses Node 24.
 
-The docs workflow supports both Yarn Classic and modern Yarn lockfiles, uses
-artifact v4, and uses gh for authenticated pushes and PR creation. Existing
+The docs workflow supports both Yarn Classic and modern Yarn lockfiles. Pin the
+matching Yarn version with `packageManager`, `yarnPath`, or a shim installed by
+`preProcessingCommand`. Node and Corepack setup runs before preprocessing so
+consumer shims keep precedence for installation and docgen. The workflow rejects
+a Yarn/lockfile format mismatch before installing dependencies, and enforces
+`--frozen-lockfile` for Classic or `--immutable` for Berry. It uses artifact v4
+and gh for authenticated pushes and PR creation. Existing
 keep-core local docs workflows are already owned and need no source switch.
 The docs destination rename is tracked separately by keep-core #4321 and
- tbtc-v2 #1135.
+tbtc-v2 #1135.
 
 ## Rollout
 
@@ -61,6 +66,7 @@ The docs destination rename is tracked separately by keep-core #4321 and
 - tbtc-v2 consumer: https://github.com/threshold-network/tbtc-v2/pull/1148
 - solidity-contracts consumer: https://github.com/threshold-network/solidity-contracts/pull/195
 
-The consumers pin `20b35345d276a3c7365e3829b8078387a7c9dccb`, which includes the
-Node compatibility and schema-validation fixes. Subsequent documentation-only
-commits do not change those action or workflow files.
+The consumers currently pin `20b35345d276a3c7365e3829b8078387a7c9dccb`, which
+includes the Node compatibility and schema-validation fixes. Before merging the
+consumer PRs, update their pins to the reviewed producer revision that also
+preserves consumer Yarn shims and enforces the lockfile format.
