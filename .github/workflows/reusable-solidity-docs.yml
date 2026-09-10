@@ -148,6 +148,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          # Using fixed version, because 18.16 was sometimes causing issues with
+          # artifacts generation during `hardhat compile` - see
+          # https://github.com/NomicFoundation/hardhat/issues/3877
+          node-version: ${{ inputs.nodeVersion }}
+
+      # Set up the toolchain before preprocessing so consumer-provided Yarn
+      # shims added to GITHUB_PATH keep precedence during install and docgen.
+      - name: Enable Corepack
+        shell: bash
+        run: corepack enable
+
       # In this step we modify the format of the comments in the Solidity
       # contracts files. We do that because our original formatting is not
       # processed by Docgen in the way we would like.
@@ -186,21 +199,28 @@ jobs:
         shell: bash
         run: git config --global url."https://".insteadOf git://
 
-      - uses: actions/setup-node@v4
-        with:
-          # Using fixed version, because 18.16 was sometimes causing issues with
-          # artifacts generation during `hardhat compile` - see
-          # https://github.com/NomicFoundation/hardhat/issues/3877
-          node-version: ${{ inputs.nodeVersion }}
-
       - name: Install dependencies
         shell: bash
+        env:
+          COREPACK_ENABLE_AUTO_PIN: "0"
         run: |
-          corepack enable
+          yarn_version=$(yarn --version)
+          echo "Using Yarn $yarn_version"
           if head -5 yarn.lock | grep -q "yarn lockfile v1"; then
+            if [[ "$yarn_version" != 1.* ]]; then
+              echo "::error::A Yarn Classic lockfile requires Yarn 1; found $yarn_version. Pin Yarn using packageManager, yarnPath, or preProcessingCommand."
+              exit 1
+            fi
             yarn install --frozen-lockfile
-          else
+          elif grep -q '^__metadata:' yarn.lock; then
+            if [[ "$yarn_version" == 1.* ]]; then
+              echo "::error::A Berry lockfile requires Yarn 2 or newer; found $yarn_version. Pin Yarn using packageManager, yarnPath, or preProcessingCommand."
+              exit 1
+            fi
             yarn install --immutable
+          else
+            echo "::error::A recognized yarn.lock is required for a locked dependency install."
+            exit 1
           fi
 
       # Generates `.md` file(s) based on config in the `hardhat.config.ts`.
