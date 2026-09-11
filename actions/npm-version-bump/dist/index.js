@@ -34248,11 +34248,12 @@ class Package {
    * @param {Version} newVersion
    */
   storeVersionInFile(newVersion) {
-    this.version = newVersion;
-
     if (!this.filePath) {
       throw new Error(`file path not defined`);
     }
+
+    this.version =
+      newVersion instanceof Version ? newVersion : new Version(String(newVersion));
 
     const packageJsonContent = (0,external_fs_namespaceObject.readFileSync)(this.filePath);
     const pacakgeJson = JSON.parse(packageJsonContent);
@@ -34299,7 +34300,8 @@ class VersionResolver {
       );
     }
 
-    this.isPrerelease = isPrerelease || environment !== "mainnet";
+    this.isPrerelease =
+      isPrerelease === "true" || isPrerelease === true || environment !== "mainnet";
 
     this.environment = environment || DEFAULT_ENVIRONMENT;
     if (this.isPrerelease && !environment) {
@@ -34363,6 +34365,11 @@ class VersionResolver {
         { cwd: this.workingDir },
         (err, stdout, stderr) => {
           if (err != null) {
+            const errorText = `${stderr || ""}${err.message || ""}`;
+            if (/E404|404 Not Found/.test(errorText)) {
+              info("package not published yet");
+              return resolve();
+            }
             return reject(err);
           }
           if (stderr) {
@@ -34454,12 +34461,11 @@ class VersionResolver {
             return reject(err);
           }
           if (stderr) {
-            return reject(stderr);
+            warning(stderr);
           }
 
           if (!stdout) {
-            warning("command output is empty");
-            return resolve();
+            return reject(new Error("npm version produced no output"));
           }
 
           core_debug(stdout);

@@ -12,6 +12,8 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   line="${line%$'\r'}"
   [[ -z "$line" || "$line" == \#* ]] && continue
   [[ "$line" =~ ^[a-zA-Z_][a-zA-Z0-9_]*= ]] || { echo "Invalid environment entry" >&2; exit 1; }
+  value="${line#*=}"
+  [[ -z "$value" || "$value" =~ ^[A-Za-z0-9._:/@+=-]*$ ]] || { echo "Invalid environment entry" >&2; exit 1; }
   printf '%s\n' "$line" >> "$validated"
 done < "$filename"
 cat "$validated" >> "$GITHUB_ENV"

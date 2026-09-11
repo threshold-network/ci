@@ -1,7 +1,6 @@
 # NPM Package Version Bump Action
 
-[![main](https://github.com/keep-network/npm-version-bump/actions/workflows/main.yml/badge.svg?branch=v2)](https://github.com/keep-network/npm-version-bump/actions/workflows/main.yml)
-[![test](https://github.com/keep-network/npm-version-bump/actions/workflows/test.yml/badge.svg?branch=v2)](https://github.com/keep-network/npm-version-bump/actions/workflows/test.yml)
+CI runs in [threshold-network/ci](https://github.com/threshold-network/ci) via `test.yml`.
 
 This is a GitHub Action that bumps version of a NPM Package.
 
@@ -19,10 +18,13 @@ The action supports following input parameters:
 
 - `work-dir` (optional, default: `.`) - location of `package.json` file,
 
-- `is-prerelease` (optional, default: `true`) - defines if the version is a prerelease,
-  currently only `true` is supported,
+- `is-prerelease` (optional, default: `true`) - defines if the version is a prerelease;
+  pass the literal string `"false"` together with `environment: mainnet` to bump a
+  release version instead,
 
-- `environment` (optional, default: `pre`) - prerelease id.
+- `environment` (optional) - prerelease id; when omitted and `is-prerelease` is
+  truthy, the preid is inherited from the current version in `package.json`
+  (falling back to `pre` if the current version isn't a prerelease).
 
 - `branch` (optional) - branch reference at which version is built
 
@@ -38,7 +40,7 @@ property](https://docs.github.com/en/actions/reference/context-and-expression-sy
 To handle this value correctly in the resulting version format the provided
 value is converted in the following way:
 
-- `refs/heads/` and `refs/tag/` prefixes are stripped out,
+- `refs/heads/` and `refs/tags/` prefixes are stripped out,
 
 - any `/` occurrence is replaced by `-`,
 
@@ -51,7 +53,7 @@ value is converted in the following way:
 - uses: threshold-network/ci/actions/npm-version-bump@<reviewed-commit-sha>
   with:
     work-dir: ./contracts       # optional, default: .
-    environment: "ropsten"      # optional, default: pre
+    environment: "ropsten"      # optional, inherited from package.json when omitted
     branch: ${{ github.ref }}   # optional
     commit: ${{ github.sha }}   # optional
 ```

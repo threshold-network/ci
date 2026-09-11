@@ -77,4 +77,60 @@ describe("Threshold dispatch ownership", () => {
     expect(error).to.be.instanceOf(Error);
     expect(error.message).to.include("denied");
   });
+  it("wires the current Threshold module dependency chain in order", () => {
+    const chain = [
+      "github.com/threshold-network/solidity-contracts",
+      "github.com/threshold-network/keep-core/random-beacon",
+      "github.com/threshold-network/keep-core/ecdsa",
+      "github.com/threshold-network/tbtc-v2",
+      "github.com/threshold-network/keep-core/client",
+    ];
+    const workflows = [
+      "contracts.yml",
+      "contracts-random-beacon.yml",
+      "contracts-ecdsa.yml",
+      "contracts.yml",
+      "client.yml",
+    ];
+
+    expect(config.defaultModuleID).to.equal(chain[0]);
+
+    for (const [index, moduleID] of chain.entries()) {
+      const moduleConfig = config.getModuleConfig(moduleID);
+      expect(moduleConfig.workflow).to.equal(workflows[index]);
+      const expectedDownstream =
+        index === chain.length - 1 ? [] : [chain[index + 1]];
+      expect(moduleConfig.downstream).to.deep.equal(expectedDownstream);
+    }
+
+    const droppedDestinations = [
+      "coverage-pools",
+      "token-dashboard",
+      "arbitrum",
+    ];
+    for (const [id, moduleConfig] of Object.entries(config.modules)) {
+      for (const dropped of droppedDestinations) {
+        expect(id).to.not.include(dropped);
+        for (const downstreamID of moduleConfig.downstream)
+          expect(downstreamID).to.not.include(dropped);
+      }
+    }
+  });
+  it("dispatches the entry-point module with a literal ref and the upstream_ref passthrough for a fresh release", async () => {
+    let body;
+    nock("https://api.github.com")
+      .post(
+        "/repos/threshold-network/solidity-contracts/actions/workflows/contracts.yml/dispatches",
+        (value) => {
+          body = value;
+          return true;
+        }
+      )
+      .reply(204);
+
+    await invoke("sepolia", "", "main");
+
+    expect(body.ref).to.equal("main");
+    expect(body.inputs.upstream_ref).to.equal("main");
+  });
 });

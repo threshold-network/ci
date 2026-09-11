@@ -25,8 +25,15 @@ describe("Version bump CLI integration", () => {
       `#!/usr/bin/env node
 const { execFileSync } = require("child_process")
 if (process.argv[2] === "view") {
+  if (process.env.TEST_NPM_VIEW_ERROR) {
+    process.stderr.write(process.env.TEST_NPM_VIEW_ERROR)
+    process.exit(1)
+  }
   process.stdout.write(process.env.TEST_NPM_VERSIONS || "")
 } else {
+  if (process.env.TEST_NPM_VERSION_WARN) {
+    process.stderr.write(process.env.TEST_NPM_VERSION_WARN)
+  }
   process.stdout.write(execFileSync(process.env.TEST_REAL_NPM, process.argv.slice(2), { cwd: process.cwd() }))
 }
 `,
@@ -57,6 +64,10 @@ if (process.argv[2] === "view") {
       })
     );
   });
+  afterEach(() => {
+    delete process.env.TEST_NPM_VIEW_ERROR;
+    delete process.env.TEST_NPM_VERSION_WARN;
+  });
   it("selects the latest matching prerelease and preserves branch/commit metadata", async () => {
     process.env.TEST_NPM_VERSIONS = JSON.stringify([
       "1.2.0-dev.2",
@@ -84,5 +95,41 @@ if (process.argv[2] === "view") {
     expect(await execute(packageDir, true, "dev", "main", "abc123")).to.equal(
       "1.2.0-dev.9+main.abc123"
     );
+  });
+  it('does not perform a prerelease bump when is-prerelease is the literal string "false"', async () => {
+    process.env.TEST_NPM_VERSIONS = "";
+    let error;
+    try {
+      await execute(packageDir, "false", "mainnet");
+    } catch (err) {
+      error = err;
+    }
+    expect(error).to.be.instanceOf(Error);
+    expect(error.message).to.equal("only prerelease version bump is supported");
+    expect(
+      JSON.parse(readFileSync(join(packageDir, "package.json"))).version
+    ).to.equal("1.2.0-dev.1");
+  });
+  it("inherits the preid from the current version when environment is omitted", async () => {
+    writeFileSync(
+      join(packageDir, "package.json"),
+      JSON.stringify({
+        name: "@keep-network/keep-core",
+        version: "1.0.1-ropsten.16",
+      })
+    );
+    process.env.TEST_NPM_VERSIONS = "";
+    expect(await execute(packageDir, "true", "")).to.equal("1.0.1-ropsten.17");
+  });
+  it("falls back to the manifest version when npm view reports a 404", async () => {
+    process.env.TEST_NPM_VIEW_ERROR =
+      "npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@threshold-network%2ftest";
+    expect(await execute(packageDir, true, "dev")).to.equal("1.2.0-dev.2");
+  });
+  it("succeeds when npm version only writes warnings to stderr", async () => {
+    process.env.TEST_NPM_VERSIONS = "";
+    process.env.TEST_NPM_VERSION_WARN =
+      "npm warn deprecated some-dependency@1.0.0: use newer version instead\n";
+    expect(await execute(packageDir, true, "dev")).to.equal("1.2.0-dev.2");
   });
 });

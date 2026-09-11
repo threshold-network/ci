@@ -1,5 +1,5 @@
 class Query {
-  static REGEXP = "^(?<output>.*)=(?<module>.*)#(?<property>.*)$"; // TODO: Dodać spacje
+  static REGEXP = "^(?<output>.*)=(?<module>.*)#(?<property>.*)$";
 
   constructor(string) {
     const matchResult = string.match(Query.REGEXP);

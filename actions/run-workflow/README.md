@@ -54,11 +54,14 @@ on:
 
 ## Development
 
-Install dependencies: `yarn install`
+Use Node 24 and run:
 
-Fix linting: `yarn run lint:fix`
+```sh
+npm ci
+npm run lint
+npm test
+npm run build
+npm run check:bundles
+```
 
-It's required to commit the content of `dist` directory after introducing changes
-to the source code.
-To build the code run: `yarn run prepare` and commit the contents
-of the `dist` directory.
+Commit the regenerated `dist` directory with source changes.

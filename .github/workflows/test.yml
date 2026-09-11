@@ -20,7 +20,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-      - run: git diff --exit-code -- actions/*/dist
+      - run: test -z "$(git status --porcelain --untracked-files=all -- actions/*/dist)"
       - run: npm run check:bundles
       - uses: ./actions/load-env-variables
         with:

@@ -23,8 +23,13 @@ async function notifyReleaseManager(
 ) {
   core.info("appending current build info to upstream builds array");
 
+  const parsed = JSON.parse(previousUpstreamBuilds);
+  if (!Array.isArray(parsed)) {
+    throw new Error("invalid upstream_builds: expected an array");
+  }
+
   /** @type {UpstreamBuilds} */
-  const newUpstreamBuilds = Array.from(JSON.parse(previousUpstreamBuilds));
+  const newUpstreamBuilds = Array.from(parsed);
   newUpstreamBuilds.push({
     module: module,
     upstream_ref: upstreamRef,

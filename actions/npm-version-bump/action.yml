@@ -12,7 +12,6 @@ inputs:
   environment:
     description: "Environment"
     required: false
-    default: "pre"
   branch:
     description: "branch"
     required: false

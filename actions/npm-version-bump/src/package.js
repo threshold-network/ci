@@ -33,11 +33,12 @@ class Package {
    * @param {Version} newVersion
    */
   storeVersionInFile(newVersion) {
-    this.version = newVersion;
-
     if (!this.filePath) {
       throw new Error(`file path not defined`);
     }
+
+    this.version =
+      newVersion instanceof Version ? newVersion : new Version(String(newVersion));
 
     const packageJsonContent = readFileSync(this.filePath);
     const pacakgeJson = JSON.parse(packageJsonContent);

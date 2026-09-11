@@ -20,10 +20,10 @@ describe("Package", function () {
   });
 
   describe("fromFile", () => {
-    it.skip("loads package data from a JSON file", async () => {
+    it("loads package data from a JSON file", async () => {
       const expected = new Package(
         "@keep-network/keep-core",
-        "1.0.1-rc.0+9876543",
+        "1.0.1-ropsten.16",
         resolve(PACKAGE_JSON_FILE_PATH)
       );
 
@@ -52,7 +52,7 @@ describe("Package", function () {
       package1 = Package.fromFile(tempFilePath);
     });
 
-    it.skip("fails for invalid semver new version", async () => {
+    it("fails for invalid semver new version", async () => {
       expect(() => package1.storeVersionInFile("1.2.3.4")).to.throw(
         Error,
         "invalid semver version: 1.2.3.4"

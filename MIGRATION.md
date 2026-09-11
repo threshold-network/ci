@@ -48,16 +48,23 @@ tbtc-v2 #1135.
 1. Review and merge the CI producer PR. Keep this repository's default
    branch as the release-manager source. Do not use inherited v2 tags: they refer
    to the unmodified Keep implementation.
-2. Ensure `CI_GITHUB_TOKEN` is available to threshold-network/ci and each consumer.
+2. After the producer PR merges, re-pin every consumer PR to the resulting
+   main commit and verify `git merge-base --is-ancestor <pinned-sha> main`
+   for each pin before starting the release manager.
+3. Ensure `CI_GITHUB_TOKEN` is available to threshold-network/ci and each consumer.
    It must be able to dispatch actions in these four repositories. Reuse the
    organization's selected-repository secret if available; do not expose tokens
    in workflow files. Ordinary fork and PR tests need no token.
-3. Merge all consumer PRs before starting the inter-repository release manager.
-   They pin the reviewed producer commit, not a moving branch. Existing npm,
+4. Merge all consumer PRs before starting the inter-repository release manager.
+   They pin the merged main revision, not a moving branch. Existing npm,
    deployment, docs, and cloud secrets remain configured in the consumer repos.
-4. Start a deliberately requested release only after those changes are in place.
+5. Start a deliberately requested release only after those changes are in place.
    Validation of this migration does not publish npm packages, push docs, deploy
    contracts, or invoke the release pipeline.
+
+The release manager always dispatches consumer workflows on their default
+branch (ref `main`); `upstream_ref` selects the consumer branch to build,
+never the workflow-file branch.
 
 ## Review links
 
@@ -66,7 +73,11 @@ tbtc-v2 #1135.
 - tbtc-v2 consumer: https://github.com/threshold-network/tbtc-v2/pull/1148
 - solidity-contracts consumer: https://github.com/threshold-network/solidity-contracts/pull/195
 
-The consumers currently pin `20b35345d276a3c7365e3829b8078387a7c9dccb`, which
-includes the Node compatibility and schema-validation fixes. Before merging the
-consumer PRs, update their pins to the reviewed producer revision that also
-preserves consumer Yarn shims and enforces the lockfile format.
+The tbtc-v2 consumer PR (#1148) has already merged, pinned to
+`20b35345d276a3c7365e3829b8078387a7c9dccb`, the producer head reviewed before
+this migration PR merged; it needs a follow-up re-pin PR. That commit — like
+any pre-merge reviewed head — is not guaranteed to become an ancestor of this
+repository's default branch once this PR merges via squash or rebase. Every
+consumer PR, merged or still open, must be re-pinned to the producer revision
+that lands on this repository's default branch after this migration PR
+merges, not to the pre-merge reviewed head.

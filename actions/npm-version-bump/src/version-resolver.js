@@ -29,7 +29,8 @@ class VersionResolver {
       );
     }
 
-    this.isPrerelease = isPrerelease || environment !== "mainnet";
+    this.isPrerelease =
+      isPrerelease === "true" || isPrerelease === true || environment !== "mainnet";
 
     this.environment = environment || DEFAULT_ENVIRONMENT;
     if (this.isPrerelease && !environment) {
@@ -93,6 +94,11 @@ class VersionResolver {
         { cwd: this.workingDir },
         (err, stdout, stderr) => {
           if (err != null) {
+            const errorText = `${stderr || ""}${err.message || ""}`;
+            if (/E404|404 Not Found/.test(errorText)) {
+              core.info("package not published yet");
+              return resolve();
+            }
             return reject(err);
           }
           if (stderr) {
@@ -184,12 +190,11 @@ class VersionResolver {
             return reject(err);
           }
           if (stderr) {
-            return reject(stderr);
+            core.warning(stderr);
           }
 
           if (!stdout) {
-            core.warning("command output is empty");
-            return resolve();
+            return reject(new Error("npm version produced no output"));
           }
 
           core.debug(stdout);

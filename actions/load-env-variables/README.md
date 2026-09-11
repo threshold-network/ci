@@ -10,8 +10,11 @@ Once imported, the variables can be used in GitHub Action's job by referencing
 ## Action inputs
 
 By default the configuration is read locally from the pinned action revision.
-An explicit `ref` fetches configuration from threshold-network/ci; prefer a full
-commit SHA if you need a different configuration revision.
+This default path reads `config/env/` from a full repository checkout at the
+pinned SHA, since GitHub Actions checks out the whole repository for a pinned
+action directory. An explicit `ref` fetches configuration from
+threshold-network/ci; prefer a full commit SHA if you need a different
+configuration revision without relying on the checked-out repository.
 
 The action supports following input parameters:
 
@@ -62,6 +65,7 @@ on: [push]
 jobs:
   run-action:
     runs-on: ubuntu-latest
+    steps:
       - name: Load environment variables
         uses: threshold-network/ci/actions/load-env-variables@<reviewed-commit-sha>
         with:

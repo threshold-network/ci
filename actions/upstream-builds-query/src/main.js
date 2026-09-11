@@ -39,7 +39,7 @@ export function execute(
       throw new Error(
         `property [${query.property}] not found for module [${query.module}]`
       );
-    } else if (failOnEmpty && result.trim() === "") {
+    } else if (failOnEmpty && String(result).trim() === "") {
       throw new Error(
         `value is empty for module [${query.module}] and property [${query.property}]`
       );

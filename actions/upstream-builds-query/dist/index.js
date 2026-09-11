@@ -30178,6 +30178,7 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("util");
 /***/ 615:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
+// CJS shim so ncc statically inlines config/config.json into each action bundle; npm run check:bundles guards this — do not convert to an ESM JSON import.
 module.exports = __nccwpck_require__(2119);
 
 
@@ -35158,6 +35159,7 @@ class Module {
    * @param {string} environment
    * @param {UpstreamBuilds} upstreamBuilds
    * @param {string} upstreamRef
+   * @see actions/notify-workflow-completed/src/notify.js for dispatch arg pattern (ref="main")
    */
   async invoke(environment, upstreamBuilds, upstreamRef) {
     info(`invoking module: ${this.id}`);
@@ -35167,7 +35169,7 @@ class Module {
         this.owner,
         this.repo,
         this.workflow,
-        upstreamRef,
+        "main",
         upstreamRef,
         environment,
         upstreamBuilds
@@ -35269,17 +35271,7 @@ class Config {
   }
 }
 
-let defaultConfigInstance;
-/**
- * @return {Config}
- */
-function getDefaultConfig() {
-  if (!defaultConfigInstance) defaultConfigInstance = new Config(default_config);
-
-  return defaultConfigInstance;
-}
-
-const config = getDefaultConfig();
+const config = new Config(default_config);
 
 // EXTERNAL MODULE: ./node_modules/jsonschema/lib/index.js
 var lib = __nccwpck_require__(4145);
@@ -35290,7 +35282,7 @@ var lib = __nccwpck_require__(4145);
  * @typedef {Build[]} UpstreamBuilds
  * @typedef {Object} Build
  * @property {string} module The name of the module that was built, including the
- * repository (e.g. github.com/keep-network/keep-core/solidity)
+ * repository (e.g. github.com/threshold-network/solidity-contracts)
  * @property {string} upstream_ref The ref used for this build
  * @property {string} version The module version used for this build
  * @property {string} url A URL that points to the GitHub Action run in-browser
@@ -35336,7 +35328,7 @@ function validateUpstreamBuilds(upstreamBuildsString) {
 
 ;// CONCATENATED MODULE: ./actions/upstream-builds-query/src/query.js
 class Query {
-  static REGEXP = "^(?<output>.*)=(?<module>.*)#(?<property>.*)$"; // TODO: Dodać spacje
+  static REGEXP = "^(?<output>.*)=(?<module>.*)#(?<property>.*)$";
 
   constructor(string) {
     const matchResult = string.match(Query.REGEXP);
@@ -35412,7 +35404,7 @@ function execute(
       throw new Error(
         `property [${query.property}] not found for module [${query.module}]`
       );
-    } else if (failOnEmpty && result.trim() === "") {
+    } else if (failOnEmpty && String(result).trim() === "") {
       throw new Error(
         `value is empty for module [${query.module}] and property [${query.property}]`
       );

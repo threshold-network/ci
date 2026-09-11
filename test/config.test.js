@@ -12,28 +12,28 @@ describe("Config", function () {
 
   it("reads configuration file", async () => {
     const expected = {
-      defaultModuleID: "github.com/keep-network/keep-ecdsa",
+      defaultModuleID: "github.com/threshold-network/keep-ecdsa",
       modules: {
-        "github.com/keep-network/keep-ecdsa": {
+        "github.com/threshold-network/keep-ecdsa": {
           workflow: "client-ethereum.yml",
-          downstream: ["github.com/keep-network/tbtc/solidity"],
+          downstream: ["github.com/threshold-network/tbtc/solidity"],
         },
-        "github.com/keep-network/tbtc/solidity": {
+        "github.com/threshold-network/tbtc/solidity": {
           workflow: "contracts.yml",
           downstream: [
-            "github.com/keep-network/keep-core/solidity/dashboard",
-            "github.com/keep-network/tbtc.js",
+            "github.com/threshold-network/keep-core/solidity/dashboard",
+            "github.com/threshold-network/tbtc.js",
           ],
         },
-        "github.com/keep-network/keep-core/solidity/dashboard": {
+        "github.com/threshold-network/keep-core/solidity/dashboard": {
           workflow: "dashboard-testnet.yml",
           downstream: [],
         },
-        "github.com/keep-network/tbtc.js": {
+        "github.com/threshold-network/tbtc.js": {
           workflow: "node.yml",
-          downstream: ["github.com/keep-network/tbtc-dapp"],
+          downstream: ["github.com/threshold-network/tbtc-dapp"],
         },
-        "github.com/keep-network/tbtc-dapp": {
+        "github.com/threshold-network/tbtc-dapp": {
           workflow: "dapp.yml",
           downstream: [],
         },

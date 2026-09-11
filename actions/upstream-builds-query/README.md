@@ -14,14 +14,16 @@
     upstream-builds: ${{ github.event.inputs.upstream_builds }}
     fail-on-empty: false # default: true
     query: |
-        keep-core-contracts-version = github.com/keep-network/keep-core/solidity#version
-        tbtc-contracts-version = github.com/keep-network/tbtc/solidity#version
+        solidity-contracts-version = github.com/threshold-network/solidity-contracts#version
+        tbtc-contracts-version = github.com/threshold-network/tbtc-v2#version
 ```
 <!-- prettier-ignore-end -->
 
 ## Outputs
 
-The action outputs property with a value of the resolved package version.
+The action emits one dynamically named output per query (`<output> =
+<module>#<property>`), each containing the selected property (`version`,
+`url`, or `upstream_ref`) of the most recent build matching that module.
 
 Example usage:
 
@@ -31,10 +33,10 @@ Example usage:
   with:
     upstream-builds: ${{ github.event.inputs.upstream_builds }}
     query: |
-        keep-core-contracts-version = github.com/keep-network/keep-core/solidity#version
-        tbtc-contracts-version = github.com/keep-network/tbtc/solidity#version
+        solidity-contracts-version = github.com/threshold-network/solidity-contracts#version
+        tbtc-contracts-version = github.com/threshold-network/tbtc-v2#version
 - name: Print resolved version
   run: |
-    echo "Resolved version: ${{ steps.upstream-builds-query.outputs.keep-core-contracts-version }}"
+    echo "Resolved version: ${{ steps.upstream-builds-query.outputs.solidity-contracts-version }}"
     echo "Resolved version: ${{ steps.upstream-builds-query.outputs.tbtc-contracts-version }}"
 ```
