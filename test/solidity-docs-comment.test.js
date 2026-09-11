@@ -76,9 +76,9 @@ function mockGitHub(initialComments = []) {
 describe("Solidity docs preview comments", () => {
   it("keeps commenting opt-in and passes the project as data", () => {
     expect(workflow.on.workflow_call.inputs.commentPR.default).to.be.false
-    expect(commentStep.if).to.include("inputs.exportAsGHArtifacts == true")
-    expect(commentStep.if).to.include("inputs.commentPR == true")
-    expect(commentStep.if).to.include("startsWith(github.ref, 'refs/pull')")
+    expect(commentStep.if.replace(/\s+/g, " ").trim()).to.equal(
+      "inputs.exportAsGHArtifacts == true && inputs.commentPR == true && startsWith(github.ref, 'refs/pull')"
+    )
     expect(commentStep.env.SOLIDITY_DOCS_PROJECT_DIR).to.equal(
       "${{ inputs.projectDir }}"
     )
@@ -109,12 +109,33 @@ describe("Solidity docs preview comments", () => {
 
     expect(calls.create).to.have.lengthOf(1)
     expect(calls.update).to.deep.equal([
-      { ...repo, comment_id: originalId, body: comments[0].body },
+      {
+        ...repo,
+        comment_id: originalId,
+        body: `${rootMarker}\nSolidity API documentation preview available in the artifacts of the https://github.com/example/contracts/actions/runs/201 check.`,
+      },
     ])
     expect(comments).to.have.lengthOf(1)
     expect(comments[0].body).to.include(rootMarker)
     expect(comments[0].body).to.include("/actions/runs/201")
     expect(comments[0].body).not.to.include("/actions/runs/100")
+  })
+
+  it("matches a workflow-owned comment whose body uses CRLF line endings", async () => {
+    const { github, comments, calls } = mockGitHub([
+      {
+        id: 1,
+        user: bot,
+        body: `${rootMarker}\r\nPreview edited in the web UI`,
+      },
+    ])
+
+    await postPreview(github, { runId: 301 })
+
+    expect(calls.create).to.be.empty
+    expect(calls.update).to.have.lengthOf(1)
+    expect(calls.update[0].comment_id).to.equal(1)
+    expect(comments[0].body).to.include("/actions/runs/301")
   })
 
   it("maintains separate comments for the root and multiple subprojects", async () => {

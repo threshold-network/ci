@@ -114,7 +114,9 @@ on:
           for this projectDir in the PR invoking the workflow. Requires
           exportAsGHArtifacts=true and a token with pull-requests: write
           permission. If the workflow is not triggered by the `pull_request`
-          event, no comment is posted."
+          event, no comment is posted. Runs for the same projectDir are not
+          serialized: overlapping runs can both create a comment, and
+          subsequent runs update the first match."
         type: boolean
         required: false
         default: false
@@ -269,7 +271,7 @@ jobs:
             const existing = comments.find(comment =>
               comment.user?.login === 'github-actions[bot]' &&
               comment.user?.type === 'Bot' &&
-              comment.body?.startsWith(`${marker}\n`)
+              comment.body?.split('\n', 1)[0].trim() === marker
             )
             if (existing) {
               await github.rest.issues.updateComment({
