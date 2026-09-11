@@ -110,10 +110,13 @@ on:
         required: false
         default: false
       commentPR:
-        description: "True if you want to add a comment with the path to the
-          generated files in the PR invoking the workflow. If the workflow is
-          not triggered by the `pull_request` event, having this input set to
-          `true` will not brake the execution."
+        description: "True if you want to create or update a preview comment
+          for this projectDir in the PR invoking the workflow. Requires
+          exportAsGHArtifacts=true and a token with pull-requests: write
+          permission. If the workflow is not triggered by the `pull_request`
+          event, no comment is posted. Runs for the same projectDir are not
+          serialized: overlapping runs can both create a comment, and
+          subsequent runs update the first match."
         type: boolean
         required: false
         default: false
@@ -250,14 +253,39 @@ jobs:
             && inputs.commentPR == true
             && startsWith(github.ref, 'refs/pull')
         uses: actions/github-script@v8
+        env:
+          SOLIDITY_DOCS_PROJECT_DIR: ${{ inputs.projectDir }}
         with:
           script: |
-            github.rest.issues.createComment({
+            const project = encodeURIComponent(process.env.SOLIDITY_DOCS_PROJECT_DIR || '.')
+            const marker = `<!-- solidity-docs-preview:${project} -->`
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            const body = `${marker}\nSolidity API documentation preview available in the artifacts of the ${runUrl} check.`
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo,
               issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'Solidity API documentation preview available in the artifacts of the https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}} check.'
+              per_page: 100
             })
+            // The default GITHUB_TOKEN authors comments as github-actions[bot].
+            // Only our marker at the start of a workflow-owned comment is eligible.
+            const existing = comments.find(comment =>
+              comment.user?.login === 'github-actions[bot]' &&
+              comment.user?.type === 'Bot' &&
+              comment.body?.split('\n', 1)[0].trim() === marker
+            )
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: existing.id,
+                body
+              })
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: context.issue.number,
+                body
+              })
+            }
 
       - name: Import GPG key
         if: inputs.publish == true && inputs.verifyCommits == true

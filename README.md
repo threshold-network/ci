@@ -17,6 +17,19 @@ reviewed full commit SHA. Each action directory documents its inputs.
 [MIGRATION.md](MIGRATION.md) describes coordinated consumer changes, credentials,
 and rollout order. Do not use the inherited v2 tags for the maintained actions.
 
+## Solidity documentation previews
+
+The [reusable Solidity docs workflow](.github/workflows/reusable-solidity-docs.yml)
+can post an artifact preview link when both `exportAsGHArtifacts` and `commentPR`
+are enabled for a pull request. Commenting defaults to `false`; callers that
+enable it must grant `pull-requests: write` to the workflow's `GITHUB_TOKEN`.
+Sequential runs update the comment identified by `projectDir`, so separate
+projects in the same PR keep separate comments; overlapping runs of the same
+`projectDir` are not serialized and may leave duplicate preview comments. Only
+comments authored by `github-actions[bot]` with the project's preview marker
+are updated. Older unmarked comments and comments written by other users are
+left untouched.
+
 ## Development
 
 Use Node 24 and run:
