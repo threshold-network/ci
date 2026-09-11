@@ -1,35 +1,47 @@
 {
-    "name": "@keep-network/ci",
-    "version": "0.0.1",
-    "description": "",
-    "main": "lib/index.js",
-    "type": "module",
-    "files": [
-        "lib",
-        "config"
-    ],
-    "scripts": {
-        "lint": "eslint .",
-        "lint:fix": "eslint --fix .",
-        "test": "mocha --exit --recursive"
-    },
-    "repository": "git+https://github.com/keep-network/ci.git",
-    "author": "Jakub Nowakowski <jakub.nowakowski@keep.network>",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/keep-network/ci/issues"
-    },
-    "homepage": "https://github.com/keep-network/ci#readme",
-    "dependencies": {
-        "@actions/core": "^1.2.6",
-        "@octokit/core": "^3.3.1",
-        "jsonschema": "^1.4.0"
-    },
-    "devDependencies": {
-        "chai": "^4.3.4",
-        "eslint": "^8.8.0",
-        "eslint-config-keep": "github:keep-network/eslint-config-keep",
-        "mocha": "^8.3.2",
-        "prettier": "^2.5.1"
-    }
+  "name": "@threshold-network/ci",
+  "version": "0.0.1",
+  "description": "",
+  "main": "lib/index.js",
+  "type": "module",
+  "files": [
+    "lib",
+    "config"
+  ],
+  "scripts": {
+    "test": "mocha --recursive test && npm run test --workspaces --if-present",
+    "build": "node scripts/build.mjs",
+    "lint": "eslint lib test actions scripts --ext .js,.mjs,.cjs",
+    "check:bundles": "node scripts/check-bundles.mjs"
+  },
+  "repository": "git+https://github.com/threshold-network/ci.git",
+  "author": "Jakub Nowakowski <jakub.nowakowski@keep.network>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/threshold-network/ci/issues"
+  },
+  "homepage": "https://github.com/threshold-network/ci#readme",
+  "dependencies": {
+    "@actions/core": "3.0.1",
+    "@octokit/core": "7.0.8",
+    "jsonschema": "1.5.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "0.45.0",
+    "chai": "4.5.0",
+    "eslint": "8.57.1",
+    "eslint-config-prettier": "9.1.0",
+    "js-yaml": "4.3.2",
+    "mocha": "12.0.0",
+    "prettier": "2.8.8",
+    "nock": "14.0.10",
+    "semver": "7.8.4"
+  },
+  "private": true,
+  "workspaces": [
+    "actions/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  }
 }

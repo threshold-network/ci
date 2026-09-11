@@ -1,31 +1,33 @@
-name: Main
-
+name: Release manager
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'The environment to run the build for'
-        required: false
-        default: 'ropsten'
+        description: Environment to build for
+        required: true
+        default: sepolia
       upstream_builds:
-        description: 'Upstream builds, if empty runs a default workflow'
+        description: Completed upstream builds; empty starts the configured pipeline
         required: false
       upstream_ref:
-        description: 'Ref'
-        required: false
-        default: 'main'
-
+        description: Consumer branch to build
+        required: true
+        default: main
+permissions:
+  contents: read
 jobs:
   run-release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
       - name: Invoke downstream workflows
-        uses: keep-network/ci/actions/run-workflow@v2
+        uses: ./actions/run-workflow
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
         with:
-          environment: ${{ github.event.inputs.environment }}
-          upstream_builds: ${{ github.event.inputs.upstream_builds }}
-          upstream_ref: ${{ github.event.inputs.upstream_ref }}
+          environment: ${{ inputs.environment }}
+          upstream_builds: ${{ inputs.upstream_builds }}
+          upstream_ref: ${{ inputs.upstream_ref }}

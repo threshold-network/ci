@@ -1,14 +1,14 @@
-const core = require("@actions/core")
-const { notifyReleaseManager } = require("./src/notify.js")
+import * as core from "@actions/core";
+import { notifyReleaseManager } from "./src/notify.js";
 
 async function run() {
   try {
-    const module = core.getInput("module")
-    const url = core.getInput("url")
-    const environment = core.getInput("environment")
-    const upstreamBuilds = core.getInput("upstream_builds") || "[]"
-    const upstreamRef = core.getInput("upstream_ref")
-    const version = core.getInput("version")
+    const module = core.getInput("module");
+    const url = core.getInput("url");
+    const environment = core.getInput("environment");
+    const upstreamBuilds = core.getInput("upstream_builds") || "[]";
+    const upstreamRef = core.getInput("upstream_ref");
+    const version = core.getInput("version");
 
     const newUpstreamBuilds = await notifyReleaseManager(
       module,
@@ -17,7 +17,7 @@ async function run() {
       upstreamBuilds,
       upstreamRef,
       version
-    )
+    );
 
     core.info(
       `submitted notification for module: ${module} with:\n` +
@@ -26,10 +26,10 @@ async function run() {
         `\tupstream builds: ${newUpstreamBuilds}\n` +
         `\tupstream_ref: ${upstreamRef}\n` +
         `\tversion: ${version}`
-    )
+    );
   } catch (error) {
-    core.setFailed(error)
+    core.setFailed(error);
   }
 }
 
-run()
+run();

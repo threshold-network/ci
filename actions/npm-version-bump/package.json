@@ -1,0 +1,27 @@
+{
+  "name": "@threshold-network/npm-version",
+  "version": "0.0.1",
+  "description": "Action bumping NPM package version",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --recursive --timeout 10000"
+  },
+  "repository": "git+https://github.com/threshold-network/ci.git",
+  "keywords": [
+    "GitHub",
+    "Actions",
+    "JavaScript"
+  ],
+  "author": "Jakub Nowakowski <jakub.nowakowski@keep.network",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/threshold-network/ci/issues"
+  },
+  "homepage": "https://github.com/threshold-network/ci/tree/main/actions/npm-version-bump",
+  "dependencies": {
+    "@actions/core": "3.0.1",
+    "semver": "7.8.4"
+  },
+  "private": true,
+  "type": "module"
+}

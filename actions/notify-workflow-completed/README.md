@@ -5,7 +5,7 @@ completion.
 
 ## Action Inputs
 
-The action supports following input parameters:
+- `module` (required)
 
 - `url` (required)
 
@@ -20,11 +20,14 @@ The action supports following input parameters:
 ## Action Usage
 
 ```yaml
-- uses: keep-network/ci/actions/notify-workflow-completed@v1
+- uses: threshold-network/ci/actions/notify-workflow-completed@<reviewed-commit-sha>
   with:
+    module: github.com/threshold-network/solidity-contracts
+    url: https://github.com/threshold-network/solidity-contracts/actions/runs/123456789
     environment: test
     upstream_builds: ""
     upstream_ref: main
+    version: 1.2.3
 ```
 
 ## External Workflow Configuration
@@ -40,11 +43,14 @@ the following input parameters:
 
 ## Development
 
-Install dependencies: `yarn install`
+Use Node 24 and run:
 
-Fix linting: `yarn run lint:fix`
+```sh
+npm ci
+npm run lint
+npm test
+npm run build
+npm run check:bundles
+```
 
-It's required to commit the content of `dist` directory after introducing changes
-to the source code.
-To build the code run: `yarn run prepare` and commit the contents
-of the `dist` directory.
+Commit the regenerated `dist` directory with source changes.

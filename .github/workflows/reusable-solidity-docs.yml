@@ -1,6 +1,6 @@
 name: Generate and push Solidity API documentation
 
-# To use this workflow, make sure `solidity-docgen` package is added to the 
+# To use this workflow, make sure `solidity-docgen` package is added to the
 # projects's dev dependencies and is configured in Hardhat config (see
 # https://github.com/OpenZeppelin/solidity-docgen#usage).
 # The workflow expects `outputDir` to be set to `generated-docs`. You may
@@ -18,6 +18,11 @@ on:
         type: string
         required: false
         default: ""
+      nodeVersion:
+        description: "Node version required by the consumer Hardhat project."
+        type: string
+        required: false
+        default: "22.23.1"
       trimComments:
         description: "True if you want to remove space characters between `///`
           and a comment text in the Solidity files, before generating `.md`
@@ -141,7 +146,17 @@ jobs:
       run:
         working-directory: .${{ inputs.projectDir }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.nodeVersion }}
+
+      # Set up the toolchain before preprocessing so consumer-provided Yarn
+      # shims added to GITHUB_PATH keep precedence during install and docgen.
+      - name: Enable Corepack
+        shell: bash
+        run: corepack enable
 
       # In this step we modify the format of the comments in the Solidity
       # contracts files. We do that because our original formatting is not
@@ -167,7 +182,7 @@ jobs:
 
       - name: Export artifacts
         if: inputs.exportAsGHArtifacts == true
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: contracts-after-preprocessing
           path: .${{ inputs.projectDir }}/contracts
@@ -181,16 +196,29 @@ jobs:
         shell: bash
         run: git config --global url."https://".insteadOf git://
 
-      - uses: actions/setup-node@v3
-        with:
-          # Using fixed version, because 18.16 was sometimes causing issues with
-          # artifacts generation during `hardhat compile` - see
-          # https://github.com/NomicFoundation/hardhat/issues/3877
-          node-version: "18.15.0"
-
       - name: Install dependencies
         shell: bash
-        run: yarn install --frozen-lockfile
+        env:
+          COREPACK_ENABLE_AUTO_PIN: "0"
+        run: |
+          yarn_version=$(yarn --version)
+          echo "Using Yarn $yarn_version"
+          if head -5 yarn.lock | grep -q "yarn lockfile v1"; then
+            if [[ "$yarn_version" != 1.* ]]; then
+              echo "::error::A Yarn Classic lockfile requires Yarn 1; found $yarn_version. Pin Yarn using packageManager, yarnPath, or preProcessingCommand."
+              exit 1
+            fi
+            yarn install --frozen-lockfile
+          elif grep -q '^__metadata:' yarn.lock; then
+            if [[ "$yarn_version" == 1.* ]]; then
+              echo "::error::A Berry lockfile requires Yarn 2 or newer; found $yarn_version. Pin Yarn using packageManager, yarnPath, or preProcessingCommand."
+              exit 1
+            fi
+            yarn install --immutable
+          else
+            echo "::error::A recognized yarn.lock is required for a locked dependency install."
+            exit 1
+          fi
 
       # Generates `.md` file(s) based on config in the `hardhat.config.ts`.
       - name: Build Markdown docs
@@ -199,7 +227,7 @@ jobs:
       - name: Add Table of Contents
         if: inputs.addTOC == true
         run: |
-          yarn global add markdown-toc 
+          npm install --global markdown-toc@1.2.0
           sed -i '2s/^/\<!-- toc --\> \n/' ./generated-docs/index.md
           sed -i '2s/^/## Table Of Contents \n/' ./generated-docs/index.md
           markdown-toc ${{ inputs.tocOptions }} ./generated-docs/index.md
@@ -211,7 +239,7 @@ jobs:
 
       - name: Export artifacts
         if: inputs.exportAsGHArtifacts == true
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: contracts-final-output
           path: .${{ inputs.projectDir }}/generated-docs
@@ -221,7 +249,7 @@ jobs:
           inputs.exportAsGHArtifacts == true
             && inputs.commentPR == true
             && startsWith(github.ref, 'refs/pull')
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           script: |
             github.rest.issues.createComment({
@@ -240,52 +268,42 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
 
-      - name: Sync generated docs with the specified repository and create PR
+      - name: Sync generated docs and create PR
         if: inputs.publish == true
         env:
-          GITHUB_TOKEN: ${{ secrets.githubToken }}
+          GH_TOKEN: ${{ secrets.githubToken }}
+          DOCS_REPO: ${{ inputs.destinationRepo }}
+          DOCS_FOLDER: ${{ inputs.destinationFolder }}
+          DOCS_BASE: ${{ inputs.destinationBaseBranch }}
+          DOCS_EMAIL: ${{ inputs.userEmail }}
+          DOCS_USER: ${{ inputs.userName }}
+          DOCS_DELETE: ${{ inputs.rsyncDelete }}
+          DOCS_SIGN: ${{ inputs.verifyCommits }}
+          SOURCE_RUN: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          echo "➞ Configure environment variables"
-            head_branch=auto-update-solidity-api-docs
-            base_branch=${{ inputs.destinationBaseBranch }}
-          echo "➞ Checkout destination repo"
-            git clone --branch $base_branch \
-              https://${{ inputs.userName }}:$GITHUB_TOKEN@github.com/${{ inputs.destinationRepo }}.git \
-              dest-repo-clone
-          echo "➞ Create/checkout head branch"
-            cd dest-repo-clone
-            git checkout $head_branch || git checkout -b $head_branch
-          echo "➞ Synchronize docs"
-            mkdir -p ${{ inputs.destinationFolder }}
-            rsync -avh ${{ inputs.rsyncDelete && '--delete' || '' }} \
-              ../generated-docs \
-              ${{ inputs.destinationFolder }}
-          echo "➞ Commit changes"
-            git add -A
-            if git status | grep -q "Changes to be committed"
-            then
-              git config --global user.email ${{ inputs.userEmail }}
-              git config --global user.name ${{ inputs.userName }}
-              git commit ${{ inputs.verifyCommits && '-S' || '' }} \
-                -m "Update docs by https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}}"
-              echo "➞ Push commit"
-                git push --set-upstream origin HEAD:$head_branch
-              echo "➞ Check if PR for the head branch already exists"
-              dest_org=$(echo ${{ inputs.destinationRepo }} | cut -d'/' -f1)
-                pr_for_head=$(curl -L \
-                  -H "Accept: application/vnd.github+json" \
-                  -H "Authorization: Bearer $GITHUB_TOKEN" \
-                  -H "X-GitHub-Api-Version: 2022-11-28" \
-                  "https://api.github.com/repos/${{ inputs.destinationRepo }}/pulls?status=open&head=$dest_org:$head_branch")
-                if [[ $pr_for_head == $'[\n\n]' ]]; then
-                  echo "➞ Checked. A PR for the head branch ($head_branch) will be created"
-                    hub pull-request --base $base_branch \
-                      --message "Update Solidity API docs" \
-                      --message "Docs updated by workflow: https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}}"
-                else
-                  echo "➞ Checked. A PR for head branch ($head_branch) already exists and got updated."
-                fi
-            else
-              echo "➞ No changes detected, no commits will be made."
-              exit 0
-            fi
+          set -euo pipefail
+          head_branch=auto-update-solidity-api-docs
+          gh auth setup-git --hostname github.com
+          git clone --branch "$DOCS_BASE" "https://github.com/$DOCS_REPO.git" dest-repo-clone
+          cd dest-repo-clone
+          git checkout "$head_branch" || git checkout -b "$head_branch"
+          mkdir -p "$DOCS_FOLDER"
+          rsync_options=(-avh)
+          if [[ "$DOCS_DELETE" == true ]]; then rsync_options+=(--delete); fi
+          rsync "${rsync_options[@]}" ../generated-docs "$DOCS_FOLDER"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No documentation changes."
+            exit 0
+          fi
+          git config user.email "$DOCS_EMAIL"
+          git config user.name "$DOCS_USER"
+          commit_options=()
+          if [[ "$DOCS_SIGN" == true ]]; then commit_options+=(-S); fi
+          git commit "${commit_options[@]}" -m "Update docs by $SOURCE_RUN"
+          git push --set-upstream origin "HEAD:$head_branch"
+          existing_prs=$(gh pr list --repo "$DOCS_REPO" --state open --base "$DOCS_BASE" --head "$head_branch" --json number --jq length)
+          if [[ "$existing_prs" == 0 ]]; then
+            gh pr create --repo "$DOCS_REPO" --base "$DOCS_BASE" --head "$head_branch" \
+              --title "Update Solidity API docs" --body "Docs updated by workflow: $SOURCE_RUN"
+          fi
