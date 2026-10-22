@@ -28,7 +28,7 @@ An explicit `ref` is still supported for a different Threshold configuration
 revision. Existing cloud project values are preserved: changing GitHub ownership
 does not itself migrate cloud infrastructure.
 
-The docs workflow accepts a `nodeVersion` input (default 22.23.1). The legacy
+The docs workflow accepts a `nodeVersion` input (default 22.23.4). The legacy
 solidity-contracts Hardhat 2.10 stack selects 18.20.8 until that project upgrades
 its build dependencies; action execution still uses Node 24.
 
